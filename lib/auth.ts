@@ -36,6 +36,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 nameBn: 'ডেমো ব্যবহারকারী',
                 role: 'FARMER',
                 isVerified: true,
+                password: 'otp-login',
               },
             });
           }
@@ -84,6 +85,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               phone,
               name: phone,
               isVerified: true,
+              password: 'otp-login',
             },
           });
         }

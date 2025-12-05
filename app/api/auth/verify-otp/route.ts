@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
             nameBn: 'ডেমো ব্যবহারকারী',
             role: 'FARMER',
             isVerified: true,
+            password: 'otp-login',
           },
         });
       }

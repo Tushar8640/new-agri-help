@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
         division,
         district,
         isVerified: !!otp,
+        password: 'otp-login',
       },
     });
 
