@@ -1,46 +1,54 @@
 'use client';
 
+import { Suspense, useState } from 'react';
+import { WelcomeSection } from '@/components/dashboard/welcome-section';
+import { QuickActions } from '@/components/dashboard/quick-actions';
+import { MarketPriceSection } from '@/components/dashboard/market-price-section';
+import { DiseaseAlertsSection } from '@/components/dashboard/disease-alerts-section';
+import { FarmSummarySection } from '@/components/dashboard/farm-summary-section';
+import { CommunityPostsSection } from '@/components/dashboard/community-posts-section';
+import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
+import { PullToRefresh } from '@/components/dashboard/pull-to-refresh';
+
 export default function DashboardPage() {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = async () => {
+    // Simulate data refresh
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          ড্যাশবোর্ড
-        </h1>
-        <p className="text-muted-foreground">
-          কৃষিমিত্রে স্বাগতম
-        </p>
-      </div>
+    <PullToRefresh onRefresh={handleRefresh}>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <div className="space-y-6" key={refreshKey}>
+          {/* Welcome Section */}
+          <WelcomeSection />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-sm font-medium text-muted-foreground">মোট জমি</h3>
-          <p className="text-2xl font-bold mt-2">০ বিঘা</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-sm font-medium text-muted-foreground">সক্রিয় ফসল</h3>
-          <p className="text-2xl font-bold mt-2">০</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-sm font-medium text-muted-foreground">মোট খরচ</h3>
-          <p className="text-2xl font-bold mt-2">৳০</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="text-sm font-medium text-muted-foreground">মোট ফলন</h3>
-          <p className="text-2xl font-bold mt-2">০ কেজি</p>
-        </div>
-      </div>
+          {/* Quick Actions */}
+          <div>
+            <h2 className="text-lg font-semibold mb-3">দ্রুত কাজ</h2>
+            <QuickActions />
+          </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border bg-card p-6">
-          <h2 className="text-lg font-semibold mb-4">আজকের বাজার দর</h2>
-          <p className="text-sm text-muted-foreground">শীঘ্রই আসছে...</p>
+          {/* Market Prices */}
+          <MarketPriceSection />
+
+          {/* Two Column Grid */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Disease Alerts */}
+            <DiseaseAlertsSection />
+
+            {/* Farm Summary */}
+            <FarmSummarySection />
+          </div>
+
+          {/* Community Posts */}
+          <CommunityPostsSection />
         </div>
-        <div className="rounded-lg border bg-card p-6">
-          <h2 className="text-lg font-semibold mb-4">সম্প্রদায় থেকে</h2>
-          <p className="text-sm text-muted-foreground">শীঘ্রই আসছে...</p>
-        </div>
-      </div>
-    </div>
+      </Suspense>
+    </PullToRefresh>
   );
 }
+
