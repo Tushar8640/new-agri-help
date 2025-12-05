@@ -1,0 +1,611 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User Models
+model User {
+  id           String     @id @default(cuid())
+  phone        String     @unique
+  email        String?
+  password     String?
+  name         String
+  nameBn       String?
+  avatar       String?
+  role         UserRole   @default(FARMER)
+  status       UserStatus @default(ACTIVE)
+  isVerified   Boolean    @default(false)
+  language     String     @default("bn")
+  division     String?
+  district     String?
+  upazila      String?
+  village      String?
+  farmSize     Float?
+  experience   Int?
+  primaryCrops String[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  seller         Seller?
+  farms          Farm[]
+  diseaseReports DiseaseReport[]
+  orders         Order[]         @relation("UserOrders")
+  reviews        Review[]
+  priceAlerts    PriceAlert[]
+  posts          CommunityPost[]
+  comments       Comment[]
+  questions      Question[]
+  answers        Answer[]
+  notifications  Notification[]
+
+  @@index([phone])
+  @@index([role])
+  @@index([district])
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@index([expiresAt])
+}
+
+model Seller {
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  businessName     String
+  businessNameBn   String?
+  businessType     BusinessType
+  isVerified       Boolean      @default(false)
+  rating           Float        @default(0)
+  totalSales       Int          @default(0)
+  contactPhone     String
+  address          String
+  bkashNumber      String?
+  nagadNumber      String?
+  status           UserStatus   @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+  orders   Order[]   @relation("SellerOrders")
+
+  @@index([userId])
+  @@index([isVerified])
+}
+
+// Farm Management Models
+model Farm {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String
+  size            Float
+  sizeUnit        SizeUnit @default(BIGHA)
+  division        String?
+  district        String?
+  soilType        String?
+  irrigationType  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fields   Field[]
+  expenses Expense[]
+  harvests Harvest[]
+
+  @@index([userId])
+  @@index([district])
+}
+
+model Field {
+  id             String       @id @default(cuid())
+  farmId         String
+  name           String
+  size           Float
+  currentCropId  String?
+  plantingDate   DateTime?
+  status         FieldStatus  @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  farm           Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  currentCrop    Crop?           @relation(fields: [currentCropId], references: [id])
+  diseaseReports DiseaseReport[]
+
+  @@index([farmId])
+  @@index([currentCropId])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  farmId      String
+  category    String
+  description String?
+  amount      Float
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  farm Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@index([farmId])
+  @@index([date])
+}
+
+model Harvest {
+  id          String   @id @default(cuid())
+  farmId      String
+  cropId      String
+  quantity    Float
+  unit        String
+  harvestDate DateTime
+  soldPrice   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  farm Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  crop Crop @relation(fields: [cropId], references: [id])
+
+  @@index([farmId])
+  @@index([cropId])
+  @@index([harvestDate])
+}
+
+// Crop and Disease Models
+model Crop {
+  id            String   @id @default(cuid())
+  name          String
+  nameBn        String?
+  category      String
+  season        String[]
+  growingDays   Int?
+  plantingGuide String?  @db.Text
+  careGuide     String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  fields       Field[]
+  seeds        Seed[]
+  harvests     Harvest[]
+  marketPrices MarketPrice[]
+
+  @@index([category])
+  @@index([name])
+}
+
+model Disease {
+  id         String           @id @default(cuid())
+  name       String
+  nameBn     String?
+  type       String
+  symptoms   String[]
+  treatment  String?          @db.Text
+  prevention String?          @db.Text
+  severity   DiseaseSeverity  @default(MEDIUM)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  // Relations
+  reports DiseaseReport[]
+
+  @@index([type])
+  @@index([severity])
+}
+
+model DiseaseReport {
+  id            String              @id @default(cuid())
+  userId        String
+  fieldId       String?
+  diseaseId     String?
+  images        String[]
+  aiDetected    Boolean             @default(false)
+  aiConfidence  Float?
+  status        DiseaseReportStatus @default(PENDING)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  field   Field?   @relation(fields: [fieldId], references: [id])
+  disease Disease? @relation(fields: [diseaseId], references: [id])
+
+  @@index([userId])
+  @@index([fieldId])
+  @@index([diseaseId])
+  @@index([status])
+}
+
+// Product and Order Models
+model Product {
+  id         String        @id @default(cuid())
+  sellerId   String
+  name       String
+  nameBn     String?
+  slug       String        @unique
+  category   String
+  price      Float
+  unit       String
+  stock      Int           @default(0)
+  images     String[]
+  rating     Float         @default(0)
+  status     ProductStatus @default(AVAILABLE)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  // Relations
+  seller     Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([slug])
+  @@index([status])
+}
+
+model Seed {
+  id                 String   @id @default(cuid())
+  cropId             String
+  variety            String
+  germination        Float?
+  suitableSeasons    String[]
+  diseaseResistance  String[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  crop Crop @relation(fields: [cropId], references: [id], onDelete: Cascade)
+
+  @@index([cropId])
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
+  userId          String
+  sellerId        String
+  total           Float
+  deliveryAddress String
+  paymentMethod   PaymentMethod
+  status          OrderStatus   @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  user   User        @relation("UserOrders", fields: [userId], references: [id])
+  seller Seller      @relation("SellerOrders", fields: [sellerId], references: [id])
+  items  OrderItem[]
+
+  @@index([userId])
+  @@index([sellerId])
+  @@index([orderNumber])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  rating    Int
+  comment   String?  @db.Text
+  images    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([productId])
+  @@index([rating])
+}
+
+// Market and Price Models
+model Market {
+  id         String     @id @default(cuid())
+  name       String
+  nameBn     String?
+  type       MarketType
+  division   String
+  district   String
+  marketDays String[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  // Relations
+  prices MarketPrice[]
+
+  @@index([district])
+  @@index([type])
+}
+
+model MarketPrice {
+  id       String     @id @default(cuid())
+  marketId String
+  cropId   String
+  minPrice Float
+  maxPrice Float
+  avgPrice Float
+  trend    PriceTrend @default(STABLE)
+  date     DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  crop   Crop   @relation(fields: [cropId], references: [id])
+
+  @@index([marketId])
+  @@index([cropId])
+  @@index([date])
+}
+
+model PriceAlert {
+  id          String    @id @default(cuid())
+  userId      String
+  cropId      String
+  alertType   AlertType
+  targetPrice Float
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+// Community Models
+model CommunityPost {
+  id           String    @id @default(cuid())
+  userId       String
+  type         PostType  @default(TEXT)
+  title        String?
+  content      String    @db.Text
+  images       String[]
+  likeCount    Int       @default(0)
+  commentCount Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  parentId  String?
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
+  replies Comment[]    @relation("CommentReplies")
+
+  @@index([userId])
+  @@index([postId])
+  @@index([parentId])
+}
+
+model Question {
+  id               String   @id @default(cuid())
+  userId           String
+  title            String
+  content          String   @db.Text
+  category         String
+  isSolved         Boolean  @default(false)
+  acceptedAnswerId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers  Answer[]
+
+  @@index([userId])
+  @@index([category])
+  @@index([isSolved])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  content    String   @db.Text
+  upvotes    Int      @default(0)
+  isAccepted Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([questionId])
+  @@index([isAccepted])
+}
+
+// Article and Notification Models
+model Article {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  title      String
+  titleBn    String?
+  content    String   @db.Text
+  category   String
+  authorName String
+  viewCount  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([slug])
+  @@index([category])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+
+// Enums
+enum UserRole {
+  FARMER
+  SELLER
+  EXPERT
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SizeUnit {
+  BIGHA
+  ACRE
+}
+
+enum FieldStatus {
+  ACTIVE
+  FALLOW
+}
+
+enum BusinessType {
+  SHOP
+  WHOLESALE
+  ONLINE
+  DISTRIBUTOR
+}
+
+enum PaymentMethod {
+  COD
+  BKASH
+  NAGAD
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum ProductStatus {
+  AVAILABLE
+  OUT_OF_STOCK
+  DISCONTINUED
+}
+
+enum MarketType {
+  WHOLESALE
+  RETAIL
+}
+
+enum PriceTrend {
+  UP
+  DOWN
+  STABLE
+}
+
+enum AlertType {
+  PRICE_DROP
+  PRICE_RISE
+}
+
+enum PostType {
+  TEXT
+  IMAGE
+  VIDEO
+  POLL
+}
+
+enum NotificationType {
+  ORDER
+  PAYMENT
+  DISEASE
+  PRICE_ALERT
+  COMMUNITY
+  SYSTEM
+}
+
+enum DiseaseSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum DiseaseReportStatus {
+  PENDING
+  CONFIRMED
+  TREATED
+  RESOLVED
+}

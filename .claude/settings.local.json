@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(del middleware.ts)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
