@@ -139,14 +139,14 @@ export default function MarketPriceTrendsPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="date"
-                  tickFormatter={(date) => {
+                  tickFormatter={(date: string) => {
                     const d = new Date(date);
                     return `${d.getDate()}/${d.getMonth() + 1}`;
                   }}
                 />
                 <YAxis />
                 <Tooltip
-                  labelFormatter={(date) => new Date(date).toLocaleDateString('bn-BD')}
+                  labelFormatter={(date: string) => new Date(date).toLocaleDateString('bn-BD')}
                   formatter={(value: number) => [`৳${value}`, language === 'bn' ? 'দর' : 'Price']}
                 />
                 <Line

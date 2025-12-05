@@ -154,7 +154,7 @@ export default function PriceAlertsPage() {
                 <Label htmlFor="alertType">
                   {language === 'bn' ? 'এলার্ট টাইপ' : 'Alert Type'}
                 </Label>
-                <Select value={alertType} onValueChange={(value: any) => setAlertType(value)}>
+                <Select value={alertType} onValueChange={(value: 'price_increase' | 'price_decrease') => setAlertType(value)}>
                   <SelectTrigger id="alertType">
                     <SelectValue />
                   </SelectTrigger>
