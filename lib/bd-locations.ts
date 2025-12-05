@@ -9,6 +9,17 @@ export const divisions = [
   { value: 'mymensingh', label: 'ময়মনসিংহ' },
 ];
 
+export const BD_LOCATIONS = [
+  { division: 'Dhaka', divisionBn: 'ঢাকা', districts: ['Dhaka', 'Faridpur', 'Gazipur', 'Gopalganj', 'Kishoreganj', 'Madaripur', 'Manikganj', 'Munshiganj', 'Narayanganj', 'Narsingdi', 'Rajbari', 'Shariatpur', 'Tangail'] },
+  { division: 'Chittagong', divisionBn: 'চট্টগ্রাম', districts: ['Bandarban', 'Brahmanbaria', 'Chandpur', 'Chittagong', 'Comilla', 'Cox\'s Bazar', 'Feni', 'Khagrachhari', 'Lakshmipur', 'Noakhali', 'Rangamati'] },
+  { division: 'Rajshahi', divisionBn: 'রাজশাহী', districts: ['Bogra', 'Joypurhat', 'Naogaon', 'Natore', 'Chapainawabganj', 'Pabna', 'Rajshahi', 'Sirajganj'] },
+  { division: 'Khulna', divisionBn: 'খুলনা', districts: ['Bagerhat', 'Chuadanga', 'Jessore', 'Jhenaidah', 'Khulna', 'Kushtia', 'Magura', 'Meherpur', 'Narail', 'Satkhira'] },
+  { division: 'Barisal', divisionBn: 'বরিশাল', districts: ['Barguna', 'Barisal', 'Bhola', 'Jhalokati', 'Patuakhali', 'Pirojpur'] },
+  { division: 'Sylhet', divisionBn: 'সিলেট', districts: ['Habiganj', 'Moulvibazar', 'Sunamganj', 'Sylhet'] },
+  { division: 'Rangpur', divisionBn: 'রংপুর', districts: ['Dinajpur', 'Gaibandha', 'Kurigram', 'Lalmonirhat', 'Nilphamari', 'Panchagarh', 'Rangpur', 'Thakurgaon'] },
+  { division: 'Mymensingh', divisionBn: 'ময়মনসিংহ', districts: ['Jamalpur', 'Mymensingh', 'Netrokona', 'Sherpur'] },
+];
+
 export const districts: Record<string, { value: string; label: string }[]> = {
   dhaka: [
     { value: 'dhaka', label: 'ঢাকা' },
