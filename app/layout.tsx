@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Hind_Siliguri, Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
 import { AuthGuard } from "@/components/auth-guard";
+import { MainLayout } from "@/components/layout/main-layout";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const hindSiliguri = Hind_Siliguri({
+  weight: ["300", "400", "500", "600", "700"],
+  subsets: ["bengali", "latin"],
+  variable: "--font-hind-siliguri",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const notoSansBengali = Noto_Sans_Bengali({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["bengali", "latin"],
+  variable: "--font-noto-sans-bengali",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -24,11 +29,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn">
+    <html lang="bn" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${hindSiliguri.variable} ${notoSansBengali.variable} font-sans antialiased`}
       >
-        <AuthGuard>{children}</AuthGuard>
+        <AuthGuard>
+          <MainLayout>{children}</MainLayout>
+        </AuthGuard>
       </body>
     </html>
   );
