@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { signToken } from '@/lib/jwt';
+import { verifyOtpSchema } from '@/lib/validators/auth';
+import { successResponse, validationErrorResponse, errorResponse, ErrorCodes } from '@/lib/api-response';
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone, otp } = await request.json();
+    const body = await request.json();
 
-    if (!phone || !otp) {
-      return NextResponse.json(
-        { error: 'Phone and OTP are required' },
-        { status: 400 }
-      );
+    // Validate input
+    const validation = verifyOtpSchema.safeParse(body);
+    if (!validation.success) {
+      return validationErrorResponse(validation.error.issues[0].message);
     }
+
+    const { phone, otp, name } = validation.data;
 
     // Demo mode: accept demo credentials
     if (phone === '01712345678' && otp === '123456') {
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
         user = await prisma.user.create({
           data: {
             phone,
-            name: 'Demo User',
+            name: name || 'Demo User',
             nameBn: 'ডেমো ব্যবহারকারী',
             role: 'FARMER',
             isVerified: true,
@@ -39,12 +42,15 @@ export async function POST(request: NextRequest) {
       });
 
       const response = NextResponse.json({
-        message: 'Login successful',
-        user: {
-          id: user.id,
-          name: user.name,
-          phone: user.phone,
-          role: user.role,
+        success: true,
+        data: {
+          message: 'লগইন সফল হয়েছে',
+          user: {
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            role: user.role,
+          },
         },
       });
 
@@ -75,9 +81,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!otpRecord) {
-      return NextResponse.json(
-        { error: 'Invalid or expired OTP' },
-        { status: 401 }
+      return errorResponse('ভুল বা মেয়াদ শেষ OTP', ErrorCodes.INVALID_OTP, 401);
       );
     }
 
@@ -87,16 +91,26 @@ export async function POST(request: NextRequest) {
       data: { verified: true },
     });
 
-    // Find user
-    const user = await prisma.user.findUnique({
+    // Find or create user
+    let user = await prisma.user.findUnique({
       where: { phone },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found. Please register first.' },
-        { status: 404 }
-      );
+      // Create new user if registering
+      if (!name) {
+        return errorResponse('নতুন ব্যবহারকারীর জন্য নাম প্রয়োজন', ErrorCodes.VALIDATION_ERROR);
+      }
+
+      user = await prisma.user.create({
+        data: {
+          phone,
+          name,
+          role: 'FARMER',
+          isVerified: true,
+          password: 'otp-login',
+        },
+      });
     }
 
     // Generate JWT token
@@ -107,12 +121,15 @@ export async function POST(request: NextRequest) {
     });
 
     const response = NextResponse.json({
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        name: user.name,
-        phone: user.phone,
-        role: user.role,
+      success: true,
+      data: {
+        message: 'লগইন সফল হয়েছে',
+        user: {
+          id: user.id,
+          name: user.name,
+          phone: user.phone,
+          role: user.role,
+        },
       },
     });
 
@@ -127,9 +144,9 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Verify OTP error:', error);
-    return NextResponse.json(
-      { error: 'Failed to verify OTP' },
-      { status: 500 }
+    return errorResponse('OTP যাচাই করতে ব্যর্থ হয়েছে', 'SERVER_ERROR', 500);
+  }
+}
     );
   }
 }

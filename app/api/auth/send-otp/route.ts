@@ -1,11 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-// Validate Bangladesh phone number format
-function validateBDPhone(phone: string): boolean {
-  const bdPhoneRegex = /^01[3-9]\d{8}$/;
-  return bdPhoneRegex.test(phone);
-}
+import { sendOtpSchema } from '@/lib/validators/auth';
+import { successResponse, validationErrorResponse, errorResponse } from '@/lib/api-response';
 
 // Generate 6-digit OTP
 function generateOTP(): string {
@@ -14,19 +10,20 @@ function generateOTP(): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone } = await request.json();
-
-    if (!phone || !validateBDPhone(phone)) {
-      return NextResponse.json(
-        { error: 'Invalid Bangladesh phone number. Must start with 01' },
-        { status: 400 }
-      );
+    const body = await request.json();
+    
+    // Validate input
+    const validation = sendOtpSchema.safeParse(body);
+    if (!validation.success) {
+      return validationErrorResponse(validation.error.issues[0].message);
     }
+
+    const { phone } = validation.data;
 
     // Demo mode: always return success for demo phone
     if (phone === '01712345678') {
-      return NextResponse.json({
-        message: 'Demo OTP sent successfully. Use 123456',
+      return successResponse({
+        message: 'ডেমো OTP পাঠানো হয়েছে। ১২৩৪৫৬ ব্যবহার করুন',
         expiresIn: 300,
       });
     }
@@ -52,17 +49,14 @@ export async function POST(request: NextRequest) {
     // TODO: In production, send OTP via SMS service (e.g., Twilio, SMS API)
     console.log(`OTP for ${phone}: ${code}`);
 
-    return NextResponse.json({
-      message: 'OTP sent successfully',
+    return successResponse({
+      message: 'OTP পাঠানো হয়েছে',
       expiresIn: 300,
       // In dev mode, return the OTP for testing
       ...(process.env.NODE_ENV === 'development' && { otp: code }),
     });
   } catch (error) {
     console.error('Send OTP error:', error);
-    return NextResponse.json(
-      { error: 'Failed to send OTP' },
-      { status: 500 }
-    );
+    return errorResponse('OTP পাঠাতে ব্যর্থ হয়েছে', 'SERVER_ERROR', 500);
   }
 }
