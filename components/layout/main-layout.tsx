@@ -12,7 +12,7 @@ interface MainLayoutProps {
   children: React.ReactNode;
 }
 
-// Pages that should not show the layout (auth pages)
+// Pages that should not show the layout (auth pages and landing page)
 const excludedRoutes = ['/login', '/register', '/verify'];
 
 export function MainLayout({ children }: MainLayoutProps) {
@@ -36,7 +36,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   };
 
   // Check if current route should be excluded from layout
-  const isExcludedRoute = excludedRoutes.some((route) => pathname.startsWith(route));
+  const isExcludedRoute = excludedRoutes.some((route) => pathname.startsWith(route)) || pathname === '/';
 
   if (isExcludedRoute) {
     return <>{children}</>;
